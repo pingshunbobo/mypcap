@@ -12,7 +12,6 @@ struct remote_node{
 	int upload;
 	int download;
 	struct remote_node *next;
-        //date;
 }; 
 
 struct localaddr_index{
@@ -31,11 +30,11 @@ struct index_table{
 
 struct index_table *init_count()
 {
-	struct index_table *index = malloc(sizeof(struct index_table));
-	index->head = NULL;
-	index->tail = NULL;
+	struct index_table * table = malloc(sizeof(struct index_table));
+	table->head = NULL;
+	table->tail = NULL;
 
-	return index;
+	return table;
 };
 
 int cleared_index()
@@ -49,19 +48,28 @@ int add_node(struct localaddr_index *index, struct in_addr *ip_remote,int way,in
 	struct remote_node *node;
 	node = index->head;
 	while(node != NULL){
-		if((node->remote_addr & *ip_remote) == *ip_remote){
+		if(!memcmp(node->remote_addr,ip_remote,10)){
 			break;
 		}
 		node = node->next;
 	}
 	if(node == NULL){
-		struct remote_node *new_node = malloc(sizeof(struct remote_node));
-		new_node->remote_addr = *ip_remote;
-		new_node->next = NULL;
-		index->tail -> next = new_node;
-		index->tail = new_node;	
+		node = malloc(sizeof(struct remote_node));
+		node->remote_addr = *ip_remote;
+		node->next = NULL;
+		node->download = 0;
+		node->upload = 0;
+
+		index->taili->next = node;
+		index->tail = node;
 	}
 
+	if(way == DOWNLOAD)
+		node->download += size;
+	else
+		node->upload += size;
+
+	return 0;
 }
 int add_count(struct sniff_ip *ip, struct index_table *table)
 {
@@ -72,34 +80,36 @@ int add_count(struct sniff_ip *ip, struct index_table *table)
 	int load_way;
 	int load_size;
 
-	if(match_addr()){
+	if(!memcmp(ip->ip_src,home_network,10)){
 		ip_local = ip->ip_src;
+		ip_remote = ip->ip_dst;
 		load_way = UPLOAD;
 	}
 	else{
-		ip_remote = ip->ip_dst;
+		ip_local = ip->ip_dst;
+		ip_remote = ip->ip_src;
 		load_way = DOWNLOAD;
 	}
 	load_size = ip->ip_len;
 
 	index = table->head;
 	while(index != NULL){
-		if(ip_local  == index->local_addr){
-			add_node(index,&ip_remote,load_way,load_size);
+		if(!memcmp(ip_local,index->local_addr,10))
 			break;
-		}
 		index = index->next;
 	}
 	if(index == NULL){
-		struct localaddr_index *new_index;
-		new_index = malloc(sizeof(struct localaddr_index));
-		new_index->local_addr = ip_local;
-		new_index->all_upload = 0;
-		new_index->all_download = 0;
+		index = malloc(sizeof(struct localaddr_index));
+		index->local_addr = ip_local;
+		index->all_upload = 0;
+		index->all_download = 0;
+		index->next=NULL;
 
-		add_node(new_index,&ip_remote,load_way,load_size);
-		table->tail = new_index; 
+		table->tail->next = index;
+		table->tail = index; 
 	}
+	add_node(index,&ip_remote,load_way,load_size);
+
 	return 0;
 }
 
