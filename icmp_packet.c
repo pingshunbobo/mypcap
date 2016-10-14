@@ -19,6 +19,20 @@ int icmp_packet(u_char *icmp_packet)
     const char *payload; /* Packet payload */
     icmp = (struct sniff_icmp*)(icmp_packet);
 
+    printf("\t");
+    switch(icmp -> ich_type){
+        case(3):
+            printf("Destination unreachable");
+            break;
+        case(8):
+            printf("ICMP echo request");
+            break;
+        case(0):
+            printf("ICMP echo replay");
+            break;
+        default:
+            printf("ICMP unknow");
+    }
     payload = (u_char *)(icmp_packet + SIZE_ICMP);
 
     return 0;
