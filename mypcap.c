@@ -12,6 +12,7 @@ struct sniff_ethernet {
     u_short ether_type; /* IP? ARP? RARP? etc */
 };
 
+struct index_table *counter;
 
 void got_packet(u_char *args, const struct pcap_pkthdr *header,
      const u_char *packet);
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
             return(2);
     }
+    counter = init_count();
     printf("Device: %s\n", dev);
 
     if (pcap_datalink(handle) != DLT_EN10MB) {
@@ -55,7 +57,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
         return(2);
     }
-        
+
     pcap_loop(handle, -1, got_packet, NULL);
     /* And close the session */
     pcap_close(handle);
@@ -81,7 +83,7 @@ void got_packet(u_char *args,\
     switch(ethernet->ether_type){
         case (0x0008):
             //printf("IP protocal:\t");
-            ip_packet(packet + SIZE_ETHERNET);
+            ip_packet(packet + SIZE_ETHERNET, counter);
             break;
         case (0x0608):
             printf("ARP prtocal:\n");

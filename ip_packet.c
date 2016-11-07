@@ -2,6 +2,11 @@
 #include <arpa/inet.h>
 #include <pcap/pcap.h>
 
+#include "packet_count.h"
+
+#ifndef  IP_HEADER
+#define IP_HEADER
+
 /* IP header */
 struct sniff_ip {
     u_char ip_vhl;        /* version << 4 | header length >> 2 */
@@ -21,7 +26,9 @@ struct sniff_ip {
 #define IP_HL(ip)        (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)        (((ip)->ip_vhl) >> 4)
 
-void ip_packet(u_char *ip_packet){
+#endif
+
+void ip_packet(u_char *ip_packet, struct index_table *counter){
 
     const struct sniff_ip *ip; /* The IP header */
 
@@ -57,6 +64,7 @@ void ip_packet(u_char *ip_packet){
             udp_packet(ip_packet + size_ip);
             break;
     }
+    add_count(ip,counter);
     printf("\n");
     return;
 }

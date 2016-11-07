@@ -2,11 +2,14 @@ CC = gcc
 CFLAGS = -g -wall
 LIBS = -lpcap
 
-mypcap: mypcap.o ip_packet.o tcp_packet.o udp_packet.o icmp_packet.o 
-	$(CC) mypcap.o ip_packet.o tcp_packet.o udp_packet.o icmp_packet.o -o mypcap $(LIBS) 
+mypcap: mypcap.o ip_packet.o packet_count.o tcp_packet.o udp_packet.o icmp_packet.o 
+	$(CC) mypcap.o ip_packet.o packet_count.o tcp_packet.o udp_packet.o icmp_packet.o -o mypcap $(LIBS) 
 
 ip_packet.o: ip_packet.c
 	gcc -c ip_packet.c
+
+packet_count.o: packet_count.c
+	gcc -c packet_count.c
 
 mypcap.o: mypcap.c
 	gcc -c mypcap.c

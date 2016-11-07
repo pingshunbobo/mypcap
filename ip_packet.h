@@ -1,3 +1,6 @@
+#ifndef IP_HEADER
+#define IP_HEADER
+
 /* IP header */
 struct sniff_ip {
     u_char ip_vhl;        /* version << 4 | header length >> 2 */
@@ -14,3 +17,5 @@ struct sniff_ip {
     u_short ip_sum;        /* checksum */
     struct in_addr ip_src,ip_dst; /* source and dest address */
 };
+
+#endif
