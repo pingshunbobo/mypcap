@@ -42,9 +42,16 @@ struct index_table *init_count()
 void dump_count(struct index_table *table)
 {
 	struct localaddr_index *index;
+	struct remote_node *node;
 	index = table->head;
         while(index != NULL){
-                printf("addr: %s\n",inet_ntoa(index->local_addr));
+                printf("%s \t down %d \t up %d\n",inet_ntoa(index->local_addr),index->all_download, index->all_upload);
+		node = index->head;
+        	while(node != NULL){
+			printf("\t=>%s down %d up %d",inet_ntoa(node->remote_addr),node->download,node->upload);
+                	node = node->next;
+        	}
+		printf("\n\n");
 		index = index->next;
         }	
 }
@@ -55,12 +62,15 @@ int cleared_index()
 	return 0;
 }
 
-int add_node(struct localaddr_index *index, struct in_addr *ip_remote,int way,int size)
+int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, int size)
 {
 	struct remote_node *node;
+
+	printf("readdr %s\n",inet_ntoa(*ip_remote));
 	node = index->head;
 	while(node != NULL){
-		if(!memcmp(&node->remote_addr,ip_remote,10)){
+		if(!strcmp(inet_ntoa(node->remote_addr),inet_ntoa(*ip_remote))){
+			printf("ADD old: %s new: %s\n",inet_ntoa(node->remote_addr),inet_ntoa(*ip_remote));
 			break;
 		}
 		node = node->next;
@@ -72,7 +82,10 @@ int add_node(struct localaddr_index *index, struct in_addr *ip_remote,int way,in
 		node->download = 0;
 		node->upload = 0;
 
-		index->tail->next = node;
+		if(index->head != NULL)
+			index->tail->next = node;
+		else
+			index->head = node;
 		index->tail = node;
 	}
 
@@ -80,7 +93,6 @@ int add_node(struct localaddr_index *index, struct in_addr *ip_remote,int way,in
 		node->download += size;
 	else
 		node->upload += size;
-
 	return 0;
 }
 int add_count(const struct sniff_ip *ip, struct index_table *table)
@@ -88,7 +100,7 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 	struct in_addr ip_local,ip_remote;
 	struct localaddr_index *index;
 
-	char home_network[]="192.168.78.0";
+	char home_network[]="192.168.21.0";
 	int load_way;
 	int load_size;
 
@@ -111,11 +123,11 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 			break;
 		index = index->next;
 	}
-	if(table->head == NULL)
-		printf("no address\n");
 	if(index == NULL){
 		index = malloc(sizeof(struct localaddr_index));
 		index->local_addr = ip_local;
+		index->head = NULL;
+		index->tail = NULL;
 		index->all_upload = 0;
 		index->all_download = 0;
 		index->next = NULL;
@@ -125,7 +137,12 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 			table->tail->next = index;
 		table->tail = index;
 	}
-	//add_node(index,&ip_remote,load_way,load_size);
+	if(load_way == DOWNLOAD)
+		index->all_download += load_size;
+	else
+		index->all_upload += load_size;
+
+	add_node(index,&ip_remote,load_way,load_size);
 	dump_count(table);
 	return 0;
 }

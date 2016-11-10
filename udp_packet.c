@@ -20,7 +20,7 @@ int udp_packet(u_char *udp_packet)
     u_int size_udp;
 
     size_udp = 8;
-    printf("\tUsport: %u \t Udport: %u",ntohs(udp->uh_sport),ntohs(udp->uh_dport));
+    printf("\tUDP:sport: %u \t dport: %u",ntohs(udp->uh_sport),ntohs(udp->uh_dport));
     payload = (u_char *)(udp_packet + size_udp);
 
     return 0;
