@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <arpa/inet.h>
 #include <pcap/pcap.h>
 #include "ip_packet.h"
@@ -28,6 +30,7 @@ struct index_table{
 	struct localaddr_index *head;
 	struct localaddr_index *tail;
 };
+struct index_table *counter;
 
 struct index_table *init_count()
 {
@@ -48,12 +51,18 @@ void dump_count(struct index_table *table)
                 printf("%s \t down %d \t up %d\n",inet_ntoa(index->local_addr),index->all_download, index->all_upload);
 		node = index->head;
         	while(node != NULL){
-			printf("\t=>%s down %d up %d",inet_ntoa(node->remote_addr),node->download,node->upload);
+			printf("\t=>%s down %d up %d\n",inet_ntoa(node->remote_addr),node->download,node->upload);
                 	node = node->next;
         	}
 		printf("\n\n");
 		index = index->next;
         }	
+}
+
+void sig_dump()
+{
+	alarm(2);
+	return dump_count(counter);
 }
 
 int cleared_index()
@@ -65,12 +74,14 @@ int cleared_index()
 int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, int size)
 {
 	struct remote_node *node;
+	char remote_addr[15] = {0};
 
-	printf("readdr %s\n",inet_ntoa(*ip_remote));
 	node = index->head;
+	strcpy(remote_addr,inet_ntoa(*ip_remote));
+
 	while(node != NULL){
-		if(!strcmp(inet_ntoa(node->remote_addr),inet_ntoa(*ip_remote))){
-			printf("ADD old: %s new: %s\n",inet_ntoa(node->remote_addr),inet_ntoa(*ip_remote));
+		if(!strcmp(inet_ntoa(node->remote_addr),remote_addr)){
+			//printf("ADD old: %s new: %s\n",inet_ntoa(node->remote_addr),remote_addr);
 			break;
 		}
 		node = node->next;
@@ -131,7 +142,7 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 		index->all_upload = 0;
 		index->all_download = 0;
 		index->next = NULL;
-		if(table -> head == NULL)
+		if(table->head == NULL)
 			table->head = index;
 		else
 			table->tail->next = index;
@@ -143,6 +154,25 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 		index->all_upload += load_size;
 
 	add_node(index,&ip_remote,load_way,load_size);
-	dump_count(table);
 	return 0;
 }
+
+
+/*
+ * singnal control dump data.
+ */
+
+void addsig( int sig, void( handler )(int), bool restart)
+{
+	struct sigaction sa;
+	memset( &sa, '\0', sizeof( sa ) );
+	sa.sa_handler = handler;
+	if( restart ){
+		sa.sa_flags |= SA_RESTART;
+	}
+	sigfillset( &sa.sa_mask );
+	if(sigaction( sig, &sa, NULL ) <= -1){
+		perror("sigaction");
+	}
+}
+

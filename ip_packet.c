@@ -46,8 +46,8 @@ void ip_packet(u_char *ip_packet, struct index_table *counter){
         return;
     }
 
-    printf("src: %s\t",inet_ntoa(ip->ip_src));
-    printf("dst: %s",inet_ntoa(ip->ip_dst));
+//    printf("src: %s\t",inet_ntoa(ip->ip_src));
+//    printf("dst: %s",inet_ntoa(ip->ip_dst));
 
     //ICMP（1）、IGMP（2） 、TCP（6）、UDP（17）
     switch(ip->ip_p){
@@ -55,7 +55,7 @@ void ip_packet(u_char *ip_packet, struct index_table *counter){
             icmp_packet(ip_packet + size_ip);
             break;
         case(0x02):
-            printf("\tIGMP\n");
+//            printf("\tIGMP\n");
             break;
         case(0x06):
             tcp_packet(ip_packet + size_ip);
@@ -65,6 +65,6 @@ void ip_packet(u_char *ip_packet, struct index_table *counter){
             break;
     }
     add_count(ip,counter);
-    printf("\n");
+//    printf("\n");
     return;
 }

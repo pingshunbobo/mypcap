@@ -1,7 +1,42 @@
+/*
+* Test program for testing interface in packet_count.c 
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <signal.h>
+#include <syscall.h>
 #include <arpa/inet.h>
 #include "packet_count.h"
+
+struct localaddr_index demo_index;
+
+void addsig( int sig, void( handler )(int), bool restart)
+{
+	struct sigaction sa;
+	memset( &sa, '\0', sizeof( sa ) );
+	sa.sa_handler = handler;
+	if( restart ){
+		sa.sa_flags |= SA_RESTART;
+	}
+	sigfillset( &sa.sa_mask );
+	if(sigaction( sig, &sa, NULL ) <= -1){
+		perror("sigaction");
+	}
+}
+
+void test()
+{
+        struct remote_node *node;
+        node = demo_index.head;
+        while(node != NULL){
+                printf("\t=>%s down %d up %d\n",inet_ntoa(node->remote_addr),node->download,node->upload);
+                node = node->next;
+        }
+        printf("\n");
+}
 
 int main()
 {
@@ -9,7 +44,6 @@ int main()
 	struct in_addr readdr2;
 	struct in_addr readdr3;
 	struct in_addr readdr4;
-	struct localaddr_index demo_index;
 
         demo_index.all_upload = 0;
         demo_index.all_download = 0;
@@ -23,22 +57,13 @@ int main()
 	inet_aton("192.168.1.23",&readdr3);
 	inet_aton("192.168.1.24",&readdr4);
 
-	printf("%s",inet_ntoa(readdr1));
-	printf("%s",inet_ntoa(readdr2));
-	printf("%s",inet_ntoa(readdr3));
-	printf("%s",inet_ntoa(readdr4));
-
 	add_node(&demo_index,&readdr1,1,1024);
 	add_node(&demo_index,&readdr2,1,1024);
 	add_node(&demo_index,&readdr3,1,1024);
 	add_node(&demo_index,&readdr4,1,1024);
 	
-	struct remote_node *node;
-	node = demo_index.head;
-	while(node != NULL){
-		printf("\t=>%s down %d up %d\n",inet_ntoa(node->remote_addr),node->download,node->upload);
-		node = node->next;
-	}
-	printf("\n");
+	addsig(SIGINT,test,false);
+while(1);
 	return 0;
 }
+

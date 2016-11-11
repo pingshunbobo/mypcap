@@ -39,6 +39,6 @@ int tcp_packet(u_char *tcp_packet)
         return;
     }
     payload = (u_char *)(tcp_packet + size_tcp);
-    printf("\tTCP:sport:%u \t dport: %u\n",ntohs(tcp->th_sport),ntohs(tcp->th_dport));
+//    printf("\tTCP:sport:%u \t dport: %u\n",ntohs(tcp->th_sport),ntohs(tcp->th_dport));
     return 0;
 }

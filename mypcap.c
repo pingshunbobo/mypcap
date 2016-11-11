@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <arpa/inet.h>
 #include <pcap/pcap.h>
 #include "packet_count.h"
@@ -42,6 +44,8 @@ int main(int argc, char *argv[])
             return(2);
     }
     counter = init_count();
+    addsig(SIGALRM,sig_dump,false);
+    alarm(2);
     printf("Device: %s\n", dev);
 
     if (pcap_datalink(handle) != DLT_EN10MB) {
@@ -86,16 +90,16 @@ void got_packet(u_char *args,\
             ip_packet(packet + SIZE_ETHERNET, counter);
             break;
         case (0x0608):
-            printf("ARP prtocal:\n");
+//            printf("ARP prtocal:\n");
             return;
         case (0x4c81):
-            printf("SNMP prtocal:\n");
+//            printf("SNMP prtocal:\n");
             return;
         case (0x3580):
-            printf("RARP prtocal:\n");
+//            printf("RARP prtocal:\n");
             return;
         default:
-            printf("Know prtocal:\n");
+//            printf("Know prtocal:\n");
             return;
     }
     return;

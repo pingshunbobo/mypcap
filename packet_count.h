@@ -48,3 +48,4 @@ int cleared_index();
 int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, int size);
 int add_count(const struct sniff_ip *ip, struct index_table *table);
 void dump_count(struct localaddr_index *index);
+void sig_dump();
