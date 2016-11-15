@@ -183,7 +183,9 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 		ip_remote = ip->ip_src;
 		load_way = DOWNLOAD;
 	}else{
-		printf("no src dst\n");
+		ip_local = ip->ip_src;
+		ip_remote = ip->ip_dst;
+		load_way = UPLOAD;
 	}
 	load_size = ip->ip_len;
 
