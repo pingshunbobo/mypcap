@@ -60,17 +60,18 @@ void sort_count(struct index_table *table)
 			if(a_bytes > b_bytes){
 				//swap two index;
 				swap_index = *a_index;
-				a_index->local_addr = b_index->local_addr;
+
 				a_index->head = b_index->head;
 				a_index->tail = b_index->tail;
-				a_index->all_download = b_index->all_download;
+				a_index->local_addr = b_index->local_addr;
 				a_index->all_upload = b_index->all_upload;
+				a_index->all_download = b_index->all_download;
 				
-				b_index->local_addr = swap_index.local_addr;
 				b_index->head = swap_index.head;
-				b_index->all_download = swap_index.all_download;
-				b_index->all_upload = swap_index.all_upload;
 				b_index->tail = swap_index.tail;
+				b_index->local_addr = swap_index.local_addr;
+				b_index->all_upload = swap_index.all_upload;
+				b_index->all_download = swap_index.all_download;
 			}
 		}
 	}
