@@ -52,7 +52,7 @@ void ip_packet(u_char *ip_packet, struct index_table *counter){
     //ICMP（1）、IGMP（2） 、TCP（6）、UDP（17）
     switch(ip->ip_p){
         case(0x01):
-            icmp_packet(ip_packet + size_ip);
+//            icmp_packet(ip_packet + size_ip);
             break;
         case(0x02):
 //            printf("\tIGMP\n");

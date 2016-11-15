@@ -19,6 +19,7 @@ struct remote_node{
 
 struct localaddr_index{
 	struct in_addr local_addr;
+	int sessions;
 	int all_upload;
 	int all_download;
 	struct remote_node *head;
@@ -46,30 +47,50 @@ void dump_count(struct index_table *table)
 {
 	struct localaddr_index *index;
 	struct remote_node *node;
+	printf(":::::::\n");
 	index = table->head;
         while(index != NULL){
-                printf("%s \t down %d \t up %d\n",inet_ntoa(index->local_addr),index->all_download, index->all_upload);
-		node = index->head;
+                printf("%s \t sessions %d\t down %dk\tup %dk\n",inet_ntoa(index->local_addr),index->sessions,index->all_download/1024, index->all_upload/1024);
+/*		node = index->head;
         	while(node != NULL){
 			printf("\t=>%s down %d up %d\n",inet_ntoa(node->remote_addr),node->download,node->upload);
                 	node = node->next;
         	}
-		printf("\n\n");
-		index = index->next;
-        }	
+		printf("\n");
+*/		index = index->next;
+        }
+}
+int clean_index(struct index_table *table)
+{
+	struct localaddr_index *index, *next_index;
+        struct remote_node *node, *next_node;
+        next_index = table->head;
+	
+	while(next_index != NULL){
+		next_node = next_index->head;
+		while(next_node != NULL){
+			node = next_node;
+			next_node = next_node->next;
+			free(node);
+		}
+		index = next_index;
+		next_index = next_index->next;
+		free(index);
+	}
+	table->head = NULL;
+	table->tail = NULL;
+
+	return 0;
 }
 
 void sig_dump()
 {
 	alarm(2);
-	return dump_count(counter);
+	dump_count(counter);
+	clean_index(counter);
+	return;
 }
 
-int cleared_index()
-{
-
-	return 0;
-}
 
 int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, int size)
 {
@@ -98,6 +119,7 @@ int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, 
 		else
 			index->head = node;
 		index->tail = node;
+		index->sessions += 1;
 	}
 
 	if(way == DOWNLOAD)
@@ -139,6 +161,7 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 		index->local_addr = ip_local;
 		index->head = NULL;
 		index->tail = NULL;
+		index->sessions = 0;
 		index->all_upload = 0;
 		index->all_download = 0;
 		index->next = NULL;
