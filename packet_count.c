@@ -24,6 +24,7 @@ struct localaddr_index{
 	int all_download;
 	struct remote_node *head;
 	struct remote_node *tail;
+	struct localaddr_index *prev;
 	struct localaddr_index *next;
 };
 
@@ -43,23 +44,38 @@ struct index_table *init_count()
 	return table;
 };
 
-void dump_count(struct index_table *table)
+
+/*
+ * Sort function . sort index order by sent+recv bytes!
+ */
+void sort_count(struct index_table *table)
 {
-	struct localaddr_index *index;
-	struct remote_node *node;
-	printf(":::::::\n");
-	index = table->head;
-        while(index != NULL){
-                printf("%s \t sessions %d\t down %dk\tup %dk\n",inet_ntoa(index->local_addr),index->sessions,index->all_download/1024, index->all_upload/1024);
-/*		node = index->head;
-        	while(node != NULL){
-			printf("\t=>%s down %d up %d\n",inet_ntoa(node->remote_addr),node->download,node->upload);
-                	node = node->next;
-        	}
-		printf("\n");
-*/		index = index->next;
-        }
+	int a_bytes, b_bytes;
+	struct localaddr_index *a_index,*b_index;
+	struct localaddr_index swap_index;
+	for(a_index = table->head; a_index != NULL; a_index = a_index->next){
+		a_bytes = a_index->all_upload + a_index->all_download;
+		for(b_index = table->head; b_index != NULL; b_index = b_index->next){
+			b_bytes = b_index->all_upload + b_index->all_download;
+			if(a_bytes > b_bytes){
+				//swap two index;
+				swap_index = *a_index;
+				a_index->local_addr = b_index->local_addr;
+				a_index->head = b_index->head;
+				a_index->tail = b_index->tail;
+				a_index->all_download = b_index->all_download;
+				a_index->all_upload = b_index->all_upload;
+				
+				b_index->local_addr = swap_index.local_addr;
+				b_index->head = swap_index.head;
+				b_index->all_download = swap_index.all_download;
+				b_index->all_upload = swap_index.all_upload;
+				b_index->tail = swap_index.tail;
+			}
+		}
+	}
 }
+
 int clean_index(struct index_table *table)
 {
 	struct localaddr_index *index, *next_index;
@@ -81,6 +97,27 @@ int clean_index(struct index_table *table)
 	table->tail = NULL;
 
 	return 0;
+}
+
+void dump_count(struct index_table *table)
+{
+	struct localaddr_index *index;
+	struct remote_node *node;
+
+	sort_count(table);
+	printf(":::: begin :::\n");
+	index = table->head;
+        while(index != NULL){
+                printf("%s \t sessions %d\t down %dk\tup %dk\n",inet_ntoa(index->local_addr),index->sessions,index->all_download/1024, index->all_upload/1024);
+/*		node = index->head;
+        	while(node != NULL){
+			printf("\t=>%s down %d up %d\n",inet_ntoa(node->remote_addr),node->download,node->upload);
+                	node = node->next;
+        	}
+		printf("\n");
+*/		index = index->next;
+        }
+	printf(":::: end :::\n");
 }
 
 void sig_dump()
@@ -164,6 +201,7 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 		index->sessions = 0;
 		index->all_upload = 0;
 		index->all_download = 0;
+		index->prev = table->tail;
 		index->next = NULL;
 		if(table->head == NULL)
 			table->head = index;
