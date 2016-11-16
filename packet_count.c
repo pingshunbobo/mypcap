@@ -34,6 +34,26 @@ struct index_table{
 };
 struct index_table *counter;
 
+
+//Identified if the address was local address!
+int is_localaddr(struct in_addr in)
+{
+        char home_network1[]="192.168.0.0";
+        char home_network2[]="172.16.0.0";
+        char home_network3[]="10.0.0.0";
+        int load_way;
+        int load_size;
+
+        if(!strncmp(home_network1, inet_ntoa(in),7))
+		return 1;
+        if(!strncmp(home_network2, inet_ntoa(in),7))
+		return 1;
+        if(!strncmp(home_network3, inet_ntoa(in),3))
+		return 1;
+	else
+		return 0;
+}
+
 struct index_table *init_count()
 {
 	struct index_table * table;
@@ -135,12 +155,11 @@ int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, 
 	struct remote_node *node;
 	char remote_addr[15] = {0};
 
-	node = index->head;
 	strcpy(remote_addr,inet_ntoa(*ip_remote));
 
+	node = index->head;
 	while(node != NULL){
 		if(!strcmp(inet_ntoa(node->remote_addr),remote_addr)){
-			//printf("ADD old: %s new: %s\n",inet_ntoa(node->remote_addr),remote_addr);
 			break;
 		}
 		node = node->next;
@@ -164,6 +183,7 @@ int add_node(struct localaddr_index *index, struct in_addr *ip_remote, int way, 
 		node->download += size;
 	else
 		node->upload += size;
+
 	return 0;
 }
 int add_count(const struct sniff_ip *ip, struct index_table *table)
@@ -171,24 +191,21 @@ int add_count(const struct sniff_ip *ip, struct index_table *table)
 	struct in_addr ip_local,ip_remote;
 	struct localaddr_index *index;
 
-	char home_network[]="192.168.21.0";
 	int load_way;
 	int load_size;
 
-	if(!strncmp(home_network, inet_ntoa(ip->ip_src),7)){
-		ip_local = ip->ip_src;
-		ip_remote = ip->ip_dst;
-		load_way = UPLOAD;
-	}else if(!strncmp(home_network,inet_ntoa(ip->ip_dst),7)){
-		ip_local = ip->ip_dst;
-		ip_remote = ip->ip_src;
-		load_way = DOWNLOAD;
-	}else{
-		ip_local = ip->ip_src;
-		ip_remote = ip->ip_dst;
-		load_way = UPLOAD;
-	}
+	ip_local = ip->ip_dst;
+	ip_remote = ip->ip_src;
+	load_way = UPLOAD;
 	load_size = ip->ip_len;
+
+	// Transpose src and dst
+	//if(!strncmp(home_network, inet_ntoa(ip->ip_src),7)){
+	if( is_localaddr(ip->ip_src) ){
+		ip_local = ip->ip_src;
+		ip_remote = ip->ip_dst;
+		load_way = DOWNLOAD;
+	}
 
 	index = table->head;
 	while(index != NULL){
