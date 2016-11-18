@@ -126,7 +126,7 @@ void dump_count(struct index_table *table)
 	struct remote_node *node;
 
 	sort_count(table);
-	printf(":::: begin :::\n");
+	printf("\n:::: begin :::\n");
 	index = table->head;
         while(index != NULL){
                 printf("%s \t sessions %d\t down %dk\tup %dk\n",inet_ntoa(index->local_addr),index->sessions,index->all_download/1024, index->all_upload/1024);
@@ -138,7 +138,7 @@ void dump_count(struct index_table *table)
 		printf("\n");
 */		index = index->next;
         }
-	printf(":::: end :::\n");
+	printf(":::: end :::\n\n");
 }
 
 void sig_dump()
