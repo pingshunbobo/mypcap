@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
 #include <pcap/pcap.h>
@@ -124,9 +125,10 @@ void dump_count(struct index_table *table)
 {
 	struct localaddr_index *index;
 	struct remote_node *node;
-
+	time_t timep;
+	time (&timep);
+	printf(":::   %s",asctime(localtime(&timep)));
 	sort_count(table);
-	printf("\n:::: begin :::\n");
 	index = table->head;
         while(index != NULL){
                 printf("%s \t sessions %d\t down %dk\tup %dk\n",inet_ntoa(index->local_addr),index->sessions,index->all_download/1024, index->all_upload/1024);
