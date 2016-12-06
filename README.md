@@ -6,5 +6,5 @@ reference from  http://www.tcpdump.org/pcap.html
 ##usage
 * compile is use **`make`**.
 
-* Run mypcap with ethernet name
-**`./mypcap eth0` **
+* Run mypcap with ethernet name. <br>
+* **`./mypcap eth0`**
